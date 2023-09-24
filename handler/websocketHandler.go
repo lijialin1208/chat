@@ -45,7 +45,7 @@ func WebsocketHandler(conn *websocket.Conn) {
 				ToID:     data["toID"].(int64),
 				Content:  data["content"].(string),
 				Kind:     data["kind"].(int),
-				CreateAt: time.Now(),
+				CreateAt: strconv.FormatInt(time.Now().UnixNano(), 10),
 			}
 			//判断消息类型（单聊/群聊/添加好友）
 			if msg.Mtype == 0 {

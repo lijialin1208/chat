@@ -59,3 +59,11 @@ func GetDynamics(page int) ([]model.Dynamic, error) {
 	}
 	return dynamics, nil
 }
+func UpdateUserHeadImage(fileName string, uid int64) bool {
+	headImage := "http://10.224.97.223:9000/headimage/" + fileName
+	result := initDB.MYSQL_DB.Model(&model.User{}).Where("id = ?", uid).Update("headimage", headImage)
+	if result.Error != nil {
+		return false
+	}
+	return true
+}

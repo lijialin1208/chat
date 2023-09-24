@@ -13,6 +13,7 @@ func InitRouter(hertz *server.Hertz) {
 	userGroup.POST("/register", handler.RegisterHandler)
 	userGroup.Use(middleware.AuthMiddleware()).GET("/getUserInfoById", handler.GetUserInfoById)
 	userGroup.Use(middleware.AuthMiddleware()).GET("/getUserInfo", handler.GetUserInfo)
+	userGroup.Use(middleware.AuthMiddleware()).POST("/updateHeadImage", handler.UpdateHeadImage)
 
 	messageGroup := hertz.Group("/api/message").Use(middleware.AuthMiddleware())
 	messageGroup.Use(middleware.AuthMiddleware()).GET("/getMessages", handler.GetMessagesHandler)

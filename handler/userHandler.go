@@ -2,6 +2,7 @@ package handler
 
 import (
 	"chat/dal/DB"
+	"chat/dal/OOS"
 	"chat/model"
 	util "chat/utils"
 	"context"
@@ -9,6 +10,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
 	"strconv"
 )
@@ -151,4 +153,34 @@ func GetUserInfo(_ context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, utils.H{
 		"data": user,
 	})
+}
+
+func UpdateHeadImage(_ context.Context, ctx *app.RequestContext) {
+	uid, _ := ctx.Get("mid")
+	fileHeader, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.String(500, "更新失败")
+		return
+	}
+	fileName := fileHeader.Filename
+	fileSize := fileHeader.Size
+	file, err := fileHeader.Open()
+	if err != nil {
+		ctx.String(500, "更新失败")
+		return
+	}
+	_, err = OOS.MINIO_CLIENT.PutObject(context.Background(), "headimage", fileName, file, fileSize, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	if err != nil {
+		ctx.String(500, "更新失败")
+		return
+	}
+	// 修改用户头像
+	success := DB.UpdateUserHeadImage(fileName, uid.(int64))
+	if success {
+		ctx.JSON(200, "http://10.224.97.223:9000/headimage/"+fileName)
+		return
+	} else {
+		ctx.String(500, "更新失败")
+		return
+	}
 }
