@@ -7,11 +7,13 @@ import (
 	util "chat/utils"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
+	"log"
 	"strconv"
 )
 
@@ -51,10 +53,29 @@ func LoginHandler(_ context.Context, ctx *app.RequestContext) {
 			return
 		}
 		userID := strconv.FormatInt(user.ID, 10)
+		//redisTODO
+		fmt.Println(userBasic.Mac)
+		err = DB.StorageUserIDAndMac(userID, userBasic.Mac)
+		if err != nil {
+			ctx.JSON(500, utils.H{
+				"state_msg": err.Error(),
+			})
+			return
+		}
+		userInfo, err := DB.GetUserInfoById(user.ID)
+		if err != nil {
+			log.Print("aaaaa")
+			ctx.JSON(500, utils.H{
+				"state_msg": err.Error(),
+			})
+			return
+		}
 		ctx.JSON(200, utils.H{
 			"state_msg": "登陆成功",
 			"token":     token,
 			"id":        userID,
+			"Avatar":    userInfo.Headimage,
+			"NickName":  userInfo.Nickname,
 		})
 	}
 }
@@ -90,28 +111,53 @@ func RegisterHandler(_ context.Context, ctx *app.RequestContext) {
 		ctx.String(500, err.Error())
 		return
 	}
+
+	userID := strconv.FormatInt(id, 10)
+	err = DB.StorageUserIDAndMac(userID, userBasic.Mac)
+	if err != nil {
+		ctx.JSON(500, utils.H{
+			"state_msg": err.Error(),
+		})
+		return
+	}
+	userInfo, err := DB.GetUserInfoById(id)
+	if err != nil {
+		ctx.JSON(500, utils.H{
+			"state_msg": err.Error(),
+		})
+		return
+	}
 	ctx.JSON(200, utils.H{
 		"state_msg": "注册成功",
 		"token":     token,
 		"id":        id,
+		"Avatar":    userInfo.Headimage,
+		"NickName":  userInfo.Nickname,
+	})
+}
+
+func LogoutHandler(_ context.Context, ctx *app.RequestContext) {
+	//获取 userID  and  userMAC
+	userID := ctx.Query("mid")
+	userMAC := ctx.Query("userMAC")
+	//删除 redis 中的 userID---userMAC
+	err := DB.DeleteUserIDAndMac(userID, userMAC)
+	if err != nil {
+		ctx.JSON(500, utils.H{
+			"state_msg": "退出失败",
+		})
+		return
+	}
+	ctx.JSON(200, utils.H{
+		"state_msg": "退出成功",
 	})
 }
 
 func GetUserInfoById(_ context.Context, ctx *app.RequestContext) {
 	//获取参数
-	mid, exists := ctx.Get("mid")
-	if !exists {
-		ctx.String(500, "服务器异常getToken")
-		return
-	}
-	myid := mid.(int64)
-	query := ctx.Query("fid")
-	fid, err2 := strconv.ParseInt(query, 10, 64)
-	if err2 != nil {
-		ctx.String(401, "参数有误")
-		return
-	}
-	result := DB.GetRemarkById(myid, fid)
+	mid := ctx.Query("mid")
+	fid := ctx.Query("fid")
+	result := DB.GetRemarkById(mid, fid)
 	session := model.Session{}
 	if err := result.Decode(&session); err != nil {
 		ctx.String(500, "服务器异常解析失败")
@@ -120,7 +166,8 @@ func GetUserInfoById(_ context.Context, ctx *app.RequestContext) {
 	//获取备注
 	remark := session.Remark
 	//获取好友其他信息
-	user, err := DB.GetUserInfoById(fid)
+	fidInt64, _ := strconv.ParseInt(fid, 10, 64)
+	user, err := DB.GetUserInfoById(fidInt64)
 	if err != nil {
 		ctx.JSON(401, utils.H{
 			"state_msg": "获取userinfo失败",
@@ -183,4 +230,41 @@ func UpdateHeadImage(_ context.Context, ctx *app.RequestContext) {
 		ctx.String(500, "更新失败")
 		return
 	}
+}
+func UpdateUserInfo(_ context.Context, ctx *app.RequestContext) {
+	userInfo := &model.UserInfo{}
+	body, _ := ctx.Body()
+	err := json.Unmarshal(body, userInfo)
+	if err != nil {
+		ctx.String(500, "更新失败")
+	}
+	err = DB.UpdateUserInfo(userInfo)
+	if err != nil {
+		ctx.String(500, "更新失败")
+	}
+	ctx.JSON(200, "更新成功")
+}
+
+func GetFriends(_ context.Context, ctx *app.RequestContext) {
+	mid := ctx.Query("id")
+	//根据用户id查询好友
+	cursor, err := DB.GetFriends(mid)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	defer cursor.Close(context.TODO())
+	var friendList []model.Friend
+	friendList = make([]model.Friend, 0)
+	for cursor.Next(context.Background()) {
+		var friend model.Friend
+		if err := cursor.Decode(&friend); err != nil {
+			ctx.String(500, "服务器异常")
+			return
+		}
+		friendList = append(friendList, friend)
+	}
+	ctx.JSON(200, utils.H{
+		"friendList": friendList,
+	})
 }

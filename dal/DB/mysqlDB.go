@@ -67,3 +67,8 @@ func UpdateUserHeadImage(fileName string, uid int64) bool {
 	}
 	return true
 }
+
+func UpdateUserInfo(userInfo *model.UserInfo) error {
+	result := initDB.MYSQL_DB.Model(&model.User{}).Where("id = ?", userInfo.ID).Update("nickanme", userInfo.Nickname)
+	return result.Error
+}

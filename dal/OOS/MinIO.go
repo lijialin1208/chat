@@ -3,7 +3,6 @@ package OOS
 import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"log"
 )
 
 var MINIO_CLIENT *minio.Client
@@ -19,7 +18,6 @@ func InitMinIOClient() {
 		Secure: useSSL,
 	})
 	if err != nil {
-		log.Fatalln(err)
+		panic(err)
 	}
-	log.Printf("%#v\n", MINIO_CLIENT)
 }

@@ -4,6 +4,7 @@ import (
 	"chat/utils"
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
+	"log"
 	"strings"
 )
 
@@ -19,5 +20,12 @@ func AuthMiddleware() app.HandlerFunc {
 			c.Set("mid", parseToken.ID)
 			c.Next(ctx)
 		}
+		defer func() {
+			err := recover()
+			if err != nil {
+				log.Print(err)
+				c.AbortWithMsg("token有误", 301)
+			}
+		}()
 	}
 }

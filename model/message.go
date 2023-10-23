@@ -8,7 +8,13 @@ type Content struct {
 type MacAddress struct {
 	Mac string `json:"mac"`
 }
-
+type MessageBasic struct {
+	Mtype   int    `json:"mtype" bson:"mtype"` //0表示单聊/1表示群聊/2表示添加好友
+	FromID  int64  `json:"fromID,string" bson:"fromID"`
+	ToID    int64  `json:"toID,string" bson:"toID"`
+	Content string `json:"content" bson:"content"`
+	Kind    int    `json:"kind" bson:"kind"`
+}
 type Message struct {
 	Mtype    int    `json:"mtype" bson:"mtype"` //0表示单聊/1表示群聊/2表示添加好友
 	FromID   int64  `json:"fromID,string" bson:"fromID"`

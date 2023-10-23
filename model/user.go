@@ -10,6 +10,11 @@ type User struct {
 type UserBasic struct {
 	Account  string `json:"username"`
 	Password string `json:"password"`
+	Mac      string `json:"mac"`
+}
+type UserInfo struct {
+	ID       string `json:"id"`
+	Nickname string `json:"nickname"`
 }
 
 func (User) TableName() string {
