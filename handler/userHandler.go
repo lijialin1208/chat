@@ -15,6 +15,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"strconv"
+	"time"
 )
 
 func LoginHandler(_ context.Context, ctx *app.RequestContext) {
@@ -267,4 +268,67 @@ func GetFriends(_ context.Context, ctx *app.RequestContext) {
 	ctx.JSON(200, utils.H{
 		"friendList": friendList,
 	})
+}
+
+func GetUserInfoByAccount(_ context.Context, ctx *app.RequestContext) {
+	account := ctx.Query("account")
+	user, err := DB.GetUserInfoByAccount(account)
+	if err != nil {
+		log.Print(err)
+		ctx.String(500, err.Error())
+		return
+	}
+	if user == nil {
+		ctx.String(402, errors.New("为查询到该用户").Error())
+		return
+	}
+
+	ctx.JSON(200, utils.H{
+		"user": user,
+	})
+}
+
+type Fid struct {
+	Fid string `json:"fid"`
+	Mid string `json:"mid"`
+}
+
+func AddFriend(_ context.Context, ctx *app.RequestContext) {
+	body, _ := ctx.Body()
+	fid := Fid{}
+	err := json.Unmarshal(body, &fid)
+	if err != nil {
+		log.Print(err)
+		ctx.String(500, err.Error())
+		return
+	}
+	//存储该消息
+	friend_id, err := strconv.ParseInt(fid.Fid, 10, 64)
+	if err != nil {
+		log.Print(err)
+		ctx.String(500, err.Error())
+		return
+	}
+	my_id, err := strconv.ParseInt(fid.Mid, 10, 64)
+	if err != nil {
+		log.Print(err)
+		ctx.String(500, err.Error())
+		return
+	}
+	message := &model.Message{
+		Mtype:    2,
+		FromID:   my_id,
+		ToID:     friend_id,
+		Content:  "",
+		Kind:     0,
+		CreateAt: strconv.FormatInt(time.Now().UnixNano(), 10),
+	}
+	err = DB.StorageMessage(message)
+	if err != nil {
+		log.Print(err)
+		ctx.String(500, err.Error())
+		return
+	}
+	//转发消息
+	ctx.String(200, "添加好友成功")
 }

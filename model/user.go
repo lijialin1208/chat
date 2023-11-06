@@ -1,7 +1,7 @@
 package model
 
 type User struct {
-	ID        int64 `gorm:"column:id"`
+	ID        int64 `gorm:"column:id" json:",Id,string"`
 	Account   string
 	Password  string
 	Nickname  string

@@ -48,14 +48,12 @@ func GetUserInfoById(fid int64) (user *model.User, err error) {
 }
 
 func GetDynamics(page int) ([]model.Dynamic, error) {
-	var count int64
+	//var count int64
 	dynamics := make([]model.Dynamic, 0)
 	result := initDB.MYSQL_DB.Model(&model.Dynamic{}).Offset(page * 15).Limit(15).Find(&dynamics)
-	result.Count(&count)
+	//result.Count(&count)
 	if result.Error != nil {
 		return dynamics, result.Error
-	} else if count == 0 {
-		return dynamics, errors.New("未查询到")
 	}
 	return dynamics, nil
 }
@@ -71,4 +69,17 @@ func UpdateUserHeadImage(fileName string, uid int64) bool {
 func UpdateUserInfo(userInfo *model.UserInfo) error {
 	result := initDB.MYSQL_DB.Model(&model.User{}).Where("id = ?", userInfo.ID).Update("nickanme", userInfo.Nickname)
 	return result.Error
+}
+
+func ReleaseDynamic(dynamic *model.Dynamic) error {
+	result := initDB.MYSQL_DB.Model(&model.Dynamic{}).Create(dynamic)
+	return result.Error
+}
+
+func GetUserInfoByAccount(account string) (user *model.User, err error) {
+	result := initDB.MYSQL_DB.Model(&model.User{}).Where("account = ?", account).First(&user)
+	if result.Error != nil {
+		return nil, err
+	}
+	return user, nil
 }

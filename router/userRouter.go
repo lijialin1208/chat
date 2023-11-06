@@ -15,12 +15,15 @@ func InitRouter(hertz *server.Hertz) {
 	userGroup.Use(middleware.AuthMiddleware()).GET("/getUserInfoById", handler.GetUserInfoById)
 	userGroup.Use(middleware.AuthMiddleware()).GET("/getFriends", handler.GetFriends)
 	userGroup.Use(middleware.AuthMiddleware()).GET("/getUserInfo", handler.GetUserInfo)
+	userGroup.Use(middleware.AuthMiddleware()).GET("/getUserInfoByAccount", handler.GetUserInfoByAccount)
 	userGroup.Use(middleware.AuthMiddleware()).POST("/updateHeadImage", handler.UpdateHeadImage)
 	userGroup.Use(middleware.AuthMiddleware()).POST("/updateUserInfo", handler.UpdateUserInfo)
+	userGroup.Use(middleware.AuthMiddleware()).POST("/addFriend", handler.AddFriend)
 
 	messageGroup := hertz.Group("/api/message").Use(middleware.AuthMiddleware())
 	messageGroup.Use(middleware.AuthMiddleware()).GET("/getMessages", handler.GetMessagesHandler)
 
 	dynamicGroup := hertz.Group("/api/dynamic")
+	dynamicGroup.Use(middleware.AuthMiddleware()).POST("/releaseDynamic", handler.ReleaseDynamicHandler)
 	dynamicGroup.Use(middleware.AuthMiddleware()).GET("/getDynamics", handler.GetDynamicsHandler)
 }
