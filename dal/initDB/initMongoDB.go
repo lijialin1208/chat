@@ -18,11 +18,13 @@ func InitMongoDB() {
 	MONGODB_DB, err = mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	// 检查连接
 	err = MONGODB_DB.Ping(context.TODO(), nil)
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 }

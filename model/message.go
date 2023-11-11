@@ -20,7 +20,7 @@ type Message struct {
 	FromID   int64  `json:"fromID,string" bson:"fromID"`
 	ToID     int64  `json:"toID,string" bson:"toID"`
 	Content  string `json:"content" bson:"content"`
-	Kind     int    `json:"kind" bson:"kind"`
+	Kind     int    `json:"kind" bson:"kind"` //0表示文本/1表示图片/2表示语音
 	CreateAt string `json:"createAt" bson:"createAt"`
 }
 type MessagePlus struct {

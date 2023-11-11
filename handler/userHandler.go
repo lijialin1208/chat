@@ -11,11 +11,13 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/json"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/hertz-contrib/websocket"
 	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
 	"log"
 	"strconv"
 	"time"
+	"unsafe"
 )
 
 func LoginHandler(_ context.Context, ctx *app.RequestContext) {
@@ -186,6 +188,7 @@ func GetUserInfo(_ context.Context, ctx *app.RequestContext) {
 	query := ctx.Query("mid")
 	mid, err := strconv.ParseInt(query, 10, 64)
 	if err != nil {
+		log.Print(err)
 		ctx.JSON(401, utils.H{
 			"state_msg": "获取userinfo失败",
 		})
@@ -330,5 +333,29 @@ func AddFriend(_ context.Context, ctx *app.RequestContext) {
 		return
 	}
 	//转发消息
+	macSlice := DB.GetUsersMac(fid.Fid)
+	macList := macSlice.Val()
+	for _, mac := range macList {
+		//获取session
+		cmd := DB.GetMacAndSession(mac)
+		session := cmd.Val()
+		log.Println(session)
+		ptr, err := strconv.ParseInt(session, 0, 64)
+		if err != nil {
+			log.Println(err)
+		}
+		//Student
+		toSession := *(**websocket.Conn)(unsafe.Pointer(uintptr(ptr)))
+		sendMessage, err := json.Marshal(message)
+		if err != nil {
+			log.Println(err)
+		}
+		//转发消息
+		fmt.Println(sendMessage)
+		err = toSession.WriteMessage(websocket.TextMessage, sendMessage)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 	ctx.String(200, "添加好友成功")
 }

@@ -89,7 +89,9 @@ func WebsocketHandler(conn *websocket.Conn) {
 						log.Println(err)
 					}
 					//转发消息
-					fmt.Println(sendMessage)
+					if toSession == nil {
+						continue
+					}
 					err = toSession.WriteMessage(websocket.TextMessage, sendMessage)
 					if err != nil {
 						log.Println(err)
@@ -104,12 +106,6 @@ func WebsocketHandler(conn *websocket.Conn) {
 		} else {
 
 		}
-
-		//err = conn.WriteMessage(mt, message)
-		//if err != nil {
-		//	log.Println("write:", err)
-		//	break
-		//}
 	}
 }
 
