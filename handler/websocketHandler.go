@@ -60,6 +60,8 @@ func WebsocketHandler(conn *websocket.Conn) {
 				Content:  data["content"].(string),
 				Kind:     int(data["kind"].(float64)),
 				CreateAt: strconv.FormatInt(time.Now().UnixNano(), 10),
+				IsRead:   data["isRead"].(bool),
+				Length:   int(data["length"].(float64)),
 			}
 			//判断消息类型（单聊/群聊/添加好友）
 			if msg.Mtype == 0 {
@@ -92,6 +94,11 @@ func WebsocketHandler(conn *websocket.Conn) {
 					if toSession == nil {
 						continue
 					}
+					defer func() {
+						if r := recover(); r != nil {
+
+						}
+					}()
 					err = toSession.WriteMessage(websocket.TextMessage, sendMessage)
 					if err != nil {
 						log.Println(err)

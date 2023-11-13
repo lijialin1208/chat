@@ -10,6 +10,13 @@ import (
 
 func AuthMiddleware() app.HandlerFunc {
 	return func(ctx context.Context, c *app.RequestContext) {
+		defer func() {
+			err := recover()
+			if err != nil {
+				log.Print(err)
+				c.AbortWithMsg("token有误", 301)
+			}
+		}()
 		tokenBytes := c.GetHeader("Authorization")
 		token := string(tokenBytes)
 		split := strings.Split(token, " ")[1]
@@ -20,12 +27,5 @@ func AuthMiddleware() app.HandlerFunc {
 			c.Set("mid", parseToken.ID)
 			c.Next(ctx)
 		}
-		defer func() {
-			err := recover()
-			if err != nil {
-				log.Print(err)
-				c.AbortWithMsg("token有误", 301)
-			}
-		}()
 	}
 }

@@ -2,10 +2,12 @@ package handler
 
 import (
 	"chat/dal/DB"
+	"chat/dal/OOS"
 	"chat/model"
 	"context"
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/utils"
+	"github.com/minio/minio-go/v7"
 	"strconv"
 )
 
@@ -40,5 +42,28 @@ func GetMessagesHandler(_ context.Context, ctx *app.RequestContext) {
 	}
 	ctx.JSON(200, utils.H{
 		"data": messages,
+	})
+}
+
+func UploadVoice(_ context.Context, ctx *app.RequestContext) {
+	fileHeader, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.String(500, "发送失败")
+		return
+	}
+	fileName := fileHeader.Filename
+	fileSize := fileHeader.Size
+	file, err := fileHeader.Open()
+	if err != nil {
+		ctx.String(500, "发送失败")
+		return
+	}
+	_, err = OOS.MINIO_CLIENT.PutObject(context.Background(), "voice", fileName, file, fileSize, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	if err != nil {
+		ctx.String(500, "发送失败")
+		return
+	}
+	ctx.JSON(200, utils.H{
+		"data": "http://10.224.97.223:9000/voice/" + fileName,
 	})
 }

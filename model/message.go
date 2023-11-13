@@ -22,6 +22,8 @@ type Message struct {
 	Content  string `json:"content" bson:"content"`
 	Kind     int    `json:"kind" bson:"kind"` //0表示文本/1表示图片/2表示语音
 	CreateAt string `json:"createAt" bson:"createAt"`
+	IsRead   bool   `json:"isRead" bson:"isRead"`
+	Length   int    `json:"length" bson:"length"`
 }
 type MessagePlus struct {
 	ID       string `json:"ID" bson:"_id"`

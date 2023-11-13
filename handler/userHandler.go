@@ -325,6 +325,8 @@ func AddFriend(_ context.Context, ctx *app.RequestContext) {
 		Content:  "",
 		Kind:     0,
 		CreateAt: strconv.FormatInt(time.Now().UnixNano(), 10),
+		IsRead:   false,
+		Length:   0,
 	}
 	err = DB.StorageMessage(message)
 	if err != nil {
